@@ -1,6 +1,6 @@
 {
-  "short_name": "Banking Dashboard",
-  "name": "Enterprise Banking Dashboard - Modern Financial Management",
+  "short_name": "Pet Adoption",
+  "name": "Pet Adoption System",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,7 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#2563eb",
-  "background_color": "#ffffff",
-  "description": "Enterprise-grade banking dashboard with real-time analytics, transaction management, and financial insights"
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
 }
