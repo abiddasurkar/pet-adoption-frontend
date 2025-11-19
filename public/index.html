@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+    <!-- Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Dynamic Theme Colors -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Enterprise Banking Dashboard by Abid Dasurkar – Modern React app to manage accounts, transactions, loans, and profiles securely."
+    />
+    <meta
+      name="keywords"
+      content="Abid Dasurkar, Frontend Developer, React, Enterprise Banking, Dashboard, Tailwind CSS, Online Banking, Transactions, Loans"
+    />
+    <meta name="author" content="Abid Dasurkar" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Enterprise Banking Dashboard by Abid Dasurkar" />
+    <meta property="og:description" content="Secure and modern banking dashboard built with React and Tailwind CSS." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://abiddasurkar.github.io/banking-dashboard" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Enterprise Banking Dashboard by Abid Dasurkar" />
+    <meta name="twitter:description" content="Secure and modern banking dashboard built with React and Tailwind CSS." />
+    <meta name="twitter:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+    <!-- Preload Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://abiddasurkar.github.io/banking-dashboard" />
+
+    <!-- Title -->
+    <title>Enterprise Banking Dashboard – Abid Dasurkar</title>
+
+    <!-- Smooth Background Transition -->
+    <style>
+      html, body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0f172a;
+        transition: background-color 0.3s ease;
+      }
+      @media (prefers-color-scheme: light) {
+        html, body {
+          background-color: #ffffff;
+        }
+      }
+    </style>
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Enterprise Banking Dashboard",
+      "url": "https://abiddasurkar.github.io/banking-dashboard",
+      "description": "Secure and modern banking dashboard to manage accounts, transactions, loans, and profiles.",
+      "applicationCategory": "FinanceApplication",
+      "author": {
+        "@type": "Person",
+        "name": "Abid Dasurkar",
+        "url": "https://abiddasurkar.github.io/portfolio",
+        "sameAs": [
+          "https://www.linkedin.com/in/abiddasurkar/",
+          "https://github.com/abiddasurkar"
+        ]
+      },
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>This Enterprise Banking Dashboard requires JavaScript to function properly.</p>
+      </div>
+    </noscript>
+
+    <!-- React Root -->
+    <div id="root"></div>
+
+    <!-- Optional Analytics (Google Analytics Example) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+# FILE 2: public/robots.txt
+# Allow all robots to crawl the site
+User-agent: *
+Allow: /
+Allow: /banking-dashboard/
+
+# Disallow private pages (if any)
+# Disallow: /admin
+# Disallow: /api
+
+# Crawl delay (milliseconds between requests)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://abiddasurkar.github.io/banking-dashboard/sitemap.xml
+Sitemap: https://abiddasurkar.github.io/sitemap.xml
