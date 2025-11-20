@@ -1,11 +1,14 @@
 import { 
   API_ENDPOINTS, 
   PAGINATION_DEFAULTS,
-  ERROR_MESSAGES ,
+  ERROR_MESSAGES,
   PET_SPECIES,
   PET_AGES,
   PET_GENDERS,
   PET_SIZES,
+  PET_HEALTH_STATUS,
+  PET_TEMPERAMENT,
+  PET_STATUS,
 } from './constants';
 import apiClient from './apiClient';
 
@@ -72,62 +75,62 @@ const petsService = {
   // Admin: Add pet
   addPet: async (petData) => {
     try {
-      // Handle file uploads if needed
-      const formData = new FormData();
-      
-      // Append all pet data to formData
-      Object.keys(petData).forEach(key => {
-        if (key === 'images' && Array.isArray(petData[key])) {
-          petData[key].forEach((image, index) => {
-            if (image instanceof File) {
-              formData.append('images', image);
-            }
-          });
-        } else {
-          formData.append(key, petData[key]);
-        }
-      });
+      // Prepare pet data with required fields
+      const payload = {
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        age: petData.age,
+        size: petData.size || '',
+        gender: petData.gender || '',
+        healthStatus: petData.healthStatus || PET_HEALTH_STATUS.GOOD,
+        temperament: Array.isArray(petData.temperament) ? petData.temperament : [],
+        photoBase64: petData.photoBase64,
+        description: petData.description || '',
+        isFeatured: Boolean(petData.isFeatured),
+        status: petData.status || PET_STATUS.AVAILABLE,
+      };
 
-      const response = await apiClient.post(API_ENDPOINTS.PETS.BASE, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // Validate required fields
+      if (!payload.name || !payload.species || !payload.breed || !payload.age || !payload.photoBase64) {
+        throw new Error('Missing required fields: name, species, breed, age, and photoBase64');
+      }
+
+      const response = await apiClient.post(API_ENDPOINTS.PETS.BASE, payload);
       return response.data;
     } catch (error) {
-      throw new Error(ERROR_MESSAGES.ADD_PET);
+      throw new Error(error.message || ERROR_MESSAGES.ADD_PET);
     }
   },
 
   // Admin: Update pet
   updatePet: async (id, petData) => {
     try {
-      // Handle file uploads if needed
-      const formData = new FormData();
-      
-      // Append all pet data to formData
-      Object.keys(petData).forEach(key => {
-        if (key === 'images' && Array.isArray(petData[key])) {
-          petData[key].forEach((image, index) => {
-            if (image instanceof File) {
-              formData.append('images', image);
-            } else if (typeof image === 'string') {
-              formData.append('existingImages', image);
-            }
-          });
-        } else {
-          formData.append(key, petData[key]);
-        }
-      });
+      // Prepare pet data with all fields
+      const payload = {
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        age: petData.age,
+        size: petData.size || '',
+        gender: petData.gender || '',
+        healthStatus: petData.healthStatus || PET_HEALTH_STATUS.GOOD,
+        temperament: Array.isArray(petData.temperament) ? petData.temperament : [],
+        photoBase64: petData.photoBase64,
+        description: petData.description || '',
+        isFeatured: Boolean(petData.isFeatured),
+        status: petData.status || PET_STATUS.AVAILABLE,
+      };
 
-      const response = await apiClient.put(API_ENDPOINTS.PETS.BY_ID(id), formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // Validate required fields
+      if (!payload.name || !payload.species || !payload.breed || !payload.age) {
+        throw new Error('Missing required fields: name, species, breed, and age');
+      }
+
+      const response = await apiClient.put(API_ENDPOINTS.PETS.BY_ID(id), payload);
       return response.data;
     } catch (error) {
-      throw new Error(ERROR_MESSAGES.UPDATE_PET);
+      throw new Error(error.message || ERROR_MESSAGES.UPDATE_PET);
     }
   },
 
@@ -159,6 +162,21 @@ const petsService = {
   // Get available genders
   getAvailableGenders: () => {
     return Object.values(PET_GENDERS);
+  },
+
+  // Get available health statuses
+  getAvailableHealthStatuses: () => {
+    return Object.values(PET_HEALTH_STATUS);
+  },
+
+  // Get available temperaments
+  getAvailableTemperaments: () => {
+    return Object.values(PET_TEMPERAMENT);
+  },
+
+  // Get available statuses
+  getAvailableStatuses: () => {
+    return Object.values(PET_STATUS);
   }
 };
 
