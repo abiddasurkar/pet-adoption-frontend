@@ -58,7 +58,7 @@ The structure is simple, clean, and easy to maintain.
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/pet-adoption-frontend.git
+git clone https://github.com/abiddasurkar/pet-adoption-frontend
 cd pet-adoption-frontend
 npm install
 cp .env.example .env
