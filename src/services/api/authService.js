@@ -77,7 +77,7 @@ const authService = {
   // Logout user
   logout: async () => {
     try {
-      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+      // await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       // Even if API call fails, clear local storage
       console.error('Logout API error:', error);
