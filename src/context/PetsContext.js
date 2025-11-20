@@ -1,5 +1,6 @@
 import React, { createContext, useState } from 'react';
-import axios from 'axios';
+import petsService from '../services/api/petsService';
+import { PAGINATION_DEFAULTS } from '../services/api/constants';
 
 export const PetsContext = createContext();
 
@@ -7,7 +8,7 @@ export const PetsProvider = ({ children }) => {
   const [allPets, setAllPets] = useState([]);
   const [filteredPets, setFilteredPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(PAGINATION_DEFAULTS.CURRENT_PAGE);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,30 +20,26 @@ export const PetsProvider = ({ children }) => {
     selectedAge: '',
   });
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  // Clear error
+  const clearError = () => setError(null);
 
   // Fetch all pets with pagination and filters
-  const fetchPets = async (page = 1, searchQuery = '', species = '', breed = '', age = '') => {
+  const fetchPets = async (page = PAGINATION_DEFAULTS.CURRENT_PAGE, searchQuery = '', species = '', breed = '', age = '') => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_URL}/api/pets`, {
-        params: {
-          page,
-          search: searchQuery,
-          species,
-          breed,
-          age,
-        },
-      });
+      const response = await petsService.fetchPets(page, searchQuery, species, breed, age);
 
-      setAllPets(response.data.pets);
-      setFilteredPets(response.data.pets);
-      setCurrentPage(response.data.currentPage);
-      setTotalPages(response.data.totalPages);
+      setAllPets(response.pets);
+      setFilteredPets(response.pets);
+      setCurrentPage(response.currentPage);
+      setTotalPages(response.totalPages);
+      
+      return response;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to fetch pets';
+      const errorMsg = err.message;
       setError(errorMsg);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -53,12 +50,13 @@ export const PetsProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_URL}/api/pets/${id}`);
-      setSelectedPet(response.data);
-      return response.data;
+      const pet = await petsService.fetchPetById(id);
+      setSelectedPet(pet);
+      return pet;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to fetch pet';
+      const errorMsg = err.message;
       setError(errorMsg);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -66,9 +64,27 @@ export const PetsProvider = ({ children }) => {
 
   // Search and filter pets
   const applyFilters = (query, species, breed, age) => {
-    setFilters({ searchQuery: query, selectedSpecies: species, selectedBreed: breed, selectedAge: age });
-    setCurrentPage(1);
-    fetchPets(1, query, species, breed, age);
+    const newFilters = { 
+      searchQuery: query, 
+      selectedSpecies: species, 
+      selectedBreed: breed, 
+      selectedAge: age 
+    };
+    setFilters(newFilters);
+    setCurrentPage(PAGINATION_DEFAULTS.CURRENT_PAGE);
+    fetchPets(PAGINATION_DEFAULTS.CURRENT_PAGE, query, species, breed, age);
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setFilters({
+      searchQuery: '',
+      selectedSpecies: '',
+      selectedBreed: '',
+      selectedAge: '',
+    });
+    setCurrentPage(PAGINATION_DEFAULTS.CURRENT_PAGE);
+    fetchPets(PAGINATION_DEFAULTS.CURRENT_PAGE);
   };
 
   // Pagination
@@ -82,11 +98,11 @@ export const PetsProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API_URL}/api/pets`, petData);
-      setAllPets([...allPets, response.data]);
-      return { success: true, data: response.data };
+      const newPet = await petsService.addPet(petData);
+      setAllPets(prev => [...prev, newPet]);
+      return { success: true, data: newPet };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to add pet';
+      const errorMsg = err.message;
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -99,12 +115,18 @@ export const PetsProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.put(`${API_URL}/api/pets/${id}`, petData);
-      const updatedPets = allPets.map((pet) => (pet._id === id ? response.data : pet));
+      const updatedPet = await petsService.updatePet(id, petData);
+      const updatedPets = allPets.map((pet) => (pet._id === id ? updatedPet : pet));
       setAllPets(updatedPets);
-      return { success: true, data: response.data };
+      
+      // Update selected pet if it's the one being updated
+      if (selectedPet && selectedPet._id === id) {
+        setSelectedPet(updatedPet);
+      }
+      
+      return { success: true, data: updatedPet };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to update pet';
+      const errorMsg = err.message;
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -117,11 +139,18 @@ export const PetsProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      await axios.delete(`${API_URL}/api/pets/${id}`);
-      setAllPets(allPets.filter((pet) => pet._id !== id));
+      await petsService.deletePet(id);
+      setAllPets(prev => prev.filter((pet) => pet._id !== id));
+      setFilteredPets(prev => prev.filter((pet) => pet._id !== id));
+      
+      // Clear selected pet if it's the one being deleted
+      if (selectedPet && selectedPet._id === id) {
+        setSelectedPet(null);
+      }
+      
       return { success: true };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to delete pet';
+      const errorMsg = err.message;
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -140,9 +169,11 @@ export const PetsProvider = ({ children }) => {
         isLoading,
         error,
         filters,
+        clearError,
         fetchPets,
         fetchPetById,
         applyFilters,
+        clearFilters,
         goToPage,
         addPet,
         updatePet,
@@ -153,5 +184,3 @@ export const PetsProvider = ({ children }) => {
     </PetsContext.Provider>
   );
 };
-
-

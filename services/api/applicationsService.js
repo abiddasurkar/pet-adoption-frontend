@@ -1,40 +1,8 @@
-import axios from 'axios';
 import { 
-  API_BASE_URL, 
   API_ENDPOINTS, 
   ERROR_MESSAGES 
 } from './constants';
-
-// Create axios instance with default config
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add auth token if available
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const errorMessage = error.response?.data?.message || ERROR_MESSAGES.DEFAULT;
-    return Promise.reject(new Error(errorMessage));
-  }
-);
+import apiClient from './apiClient'; // We'll create this shared client
 
 // Applications API Service
 const applicationsService = {

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import authService from '../services/api/authService';
+import { USER_ROLES } from '../services/api/constants';
 
 export const AuthContext = createContext();
 
@@ -10,49 +11,39 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
     // Check if token exists on mount
     useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+        const storedToken = authService.getStoredToken();
+        const storedUser = authService.getStoredUser();
 
         if (storedToken && storedUser) {
             setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+            setUser(storedUser);
             setIsLoggedIn(true);
-
-            // Set default axios header
-            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
     }, []);
+
+    // Clear error
+    const clearError = () => setError(null);
 
     // Signup function
     const signup = async (email, password, name, phone, address) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${API_URL}/api/auth/signup`, {
-                email,
-                password,
-                name,
-                phone,
-                address,
-            });
-
-            const { token: newToken, user: userData } = response.data;
+            const { token: newToken, user: userData } = await authService.signup(
+                email, password, name, phone, address
+            );
 
             setToken(newToken);
             setUser(userData);
             setIsLoggedIn(true);
 
-            localStorage.setItem('token', newToken);
-            localStorage.setItem('user', JSON.stringify(userData));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+            authService.storeAuthData(newToken, userData);
 
             return { success: true, data: userData };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Signup failed';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -65,24 +56,17 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${API_URL}/api/auth/login`, {
-                email,
-                password,
-            });
-
-            const { token: newToken, user: userData } = response.data;
+            const { token: newToken, user: userData } = await authService.login(email, password);
 
             setToken(newToken);
             setUser(userData);
             setIsLoggedIn(true);
 
-            localStorage.setItem('token', newToken);
-            localStorage.setItem('user', JSON.stringify(userData));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+            authService.storeAuthData(newToken, userData);
 
             return { success: true, data: userData };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Login failed';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -91,17 +75,20 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Logout function
-    const logout = () => {
-        setUser(null);
-        setToken(null);
-        setIsLoggedIn(false);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
+    const logout = async () => {
+        try {
+            await authService.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            setToken(null);
+            setIsLoggedIn(false);
+        }
     };
 
     // Check if user has admin role
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === USER_ROLES.ADMIN;
 
     return (
         <AuthContext.Provider
@@ -112,6 +99,7 @@ export const AuthProvider = ({ children }) => {
                 error,
                 isLoggedIn,
                 isAdmin,
+                clearError,
                 signup,
                 login,
                 logout,
