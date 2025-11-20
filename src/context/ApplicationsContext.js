@@ -1,5 +1,5 @@
 import React, { createContext, useState } from 'react';
-import applicationsService from '../../services/api/applicationsService';
+import { applicationsService } from '../services/api';
 
 export const ApplicationsContext = createContext();
 
