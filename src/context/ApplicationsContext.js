@@ -1,5 +1,5 @@
 import React, { createContext, useState } from 'react';
-import axios from 'axios';
+import applicationsService from '../../services/api/applicationsService';
 
 export const ApplicationsContext = createContext();
 
@@ -9,19 +9,21 @@ export const ApplicationsProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    // Clear error
+    const clearError = () => setError(null);
 
     // Get user's applications
     const getUserApplications = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${API_URL}/api/applications/my`);
-            setUserApplications(response.data);
-            return response.data;
+            const applications = await applicationsService.getUserApplications();
+            setUserApplications(applications);
+            return applications;
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to fetch applications';
+            const errorMsg = err.message;
             setError(errorMsg);
+            throw err;
         } finally {
             setIsLoading(false);
         }
@@ -32,12 +34,13 @@ export const ApplicationsProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${API_URL}/api/applications`);
-            setAllApplications(response.data);
-            return response.data;
+            const applications = await applicationsService.getAllApplications();
+            setAllApplications(applications);
+            return applications;
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to fetch applications';
+            const errorMsg = err.message;
             setError(errorMsg);
+            throw err;
         } finally {
             setIsLoading(false);
         }
@@ -48,14 +51,11 @@ export const ApplicationsProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${API_URL}/api/applications`, {
-                petId,
-                userMessage: message,
-            });
-            setUserApplications([...userApplications, response.data]);
-            return { success: true, data: response.data };
+            const application = await applicationsService.applyForAdoption(petId, message);
+            setUserApplications(prev => [...prev, application]);
+            return { success: true, data: application };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to apply for adoption';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -68,14 +68,13 @@ export const ApplicationsProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.put(`${API_URL}/api/applications/${appId}/approve`, {
-                adminNotes: notes,
-            });
-            const updatedApps = allApplications.map((app) => (app._id === appId ? response.data : app));
-            setAllApplications(updatedApps);
-            return { success: true, data: response.data };
+            const updatedApp = await applicationsService.approveApplication(appId, notes);
+            setAllApplications(prev => prev.map(app => 
+                app._id === appId ? updatedApp : app
+            ));
+            return { success: true, data: updatedApp };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to approve application';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -88,14 +87,13 @@ export const ApplicationsProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.put(`${API_URL}/api/applications/${appId}/reject`, {
-                adminNotes: notes,
-            });
-            const updatedApps = allApplications.map((app) => (app._id === appId ? response.data : app));
-            setAllApplications(updatedApps);
-            return { success: true, data: response.data };
+            const updatedApp = await applicationsService.rejectApplication(appId, notes);
+            setAllApplications(prev => prev.map(app => 
+                app._id === appId ? updatedApp : app
+            ));
+            return { success: true, data: updatedApp };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to reject application';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -108,11 +106,11 @@ export const ApplicationsProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            await axios.delete(`${API_URL}/api/applications/${appId}`);
-            setUserApplications(userApplications.filter((app) => app._id !== appId));
+            await applicationsService.withdrawApplication(appId);
+            setUserApplications(prev => prev.filter(app => app._id !== appId));
             return { success: true };
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to withdraw application';
+            const errorMsg = err.message;
             setError(errorMsg);
             return { success: false, error: errorMsg };
         } finally {
@@ -127,6 +125,7 @@ export const ApplicationsProvider = ({ children }) => {
                 allApplications,
                 isLoading,
                 error,
+                clearError,
                 getUserApplications,
                 getAllApplications,
                 applyForAdoption,
