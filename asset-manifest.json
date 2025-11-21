@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/pet-adoption-frontend/static/css/main.e75f65cb.css",
-    "main.js": "/pet-adoption-frontend/static/js/main.43f51ec1.js",
+    "main.css": "/pet-adoption-frontend/static/css/main.e58a46a3.css",
+    "main.js": "/pet-adoption-frontend/static/js/main.f9ef9a75.js",
     "index.html": "/pet-adoption-frontend/index.html",
-    "main.e75f65cb.css.map": "/pet-adoption-frontend/static/css/main.e75f65cb.css.map",
-    "main.43f51ec1.js.map": "/pet-adoption-frontend/static/js/main.43f51ec1.js.map"
+    "main.e58a46a3.css.map": "/pet-adoption-frontend/static/css/main.e58a46a3.css.map",
+    "main.f9ef9a75.js.map": "/pet-adoption-frontend/static/js/main.f9ef9a75.js.map"
   },
   "entrypoints": [
-    "static/css/main.e75f65cb.css",
-    "static/js/main.43f51ec1.js"
+    "static/css/main.e58a46a3.css",
+    "static/js/main.f9ef9a75.js"
   ]
 }
