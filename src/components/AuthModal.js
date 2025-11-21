@@ -17,7 +17,11 @@ export default function AuthModal() {
     });
 
     const { login, signup, isLoading, error, clearError, isLoggedIn, logout } = useContext(AuthContext);
-    const { showToast, authModalOpen, closeAuthModal, openAuthModal } = useContext(UIContext);
+    const { showToast, authModalOpen, closeAuthModal, openAuthModal, signupModalOpen, closeSignupModal } = useContext(UIContext);
+
+    // Determine if modal should be open and what mode
+    const isModalOpen = authModalOpen || signupModalOpen;
+    const shouldBeSignupMode = signupModalOpen;
 
     // Check mobile viewport
     useEffect(() => {
@@ -30,36 +34,46 @@ export default function AuthModal() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Set mode based on which modal opened
+    useEffect(() => {
+        if (signupModalOpen) {
+            setIsLoginMode(false);
+        } else if (authModalOpen) {
+            setIsLoginMode(true);
+        }
+    }, [signupModalOpen, authModalOpen]);
+
     // Auto-close modal if user is logged in
     useEffect(() => {
-        if (isLoggedIn && authModalOpen) {
+        if (isLoggedIn && isModalOpen) {
             closeAuthModal();
+            closeSignupModal();
         }
-    }, [isLoggedIn, authModalOpen, closeAuthModal]);
+    }, [isLoggedIn, isModalOpen, closeAuthModal, closeSignupModal]);
 
     // Clear form when modal is opened (after sign out)
     useEffect(() => {
-        if (authModalOpen && !isLoggedIn) {
+        if (isModalOpen && !isLoggedIn) {
             resetForm();
         }
-    }, [authModalOpen, isLoggedIn]);
+    }, [isModalOpen, isLoggedIn]);
 
     // Close modal on escape key
     useEffect(() => {
         const handleEscape = (e) => {
-            if (e.key === 'Escape' && authModalOpen) {
+            if (e.key === 'Escape' && isModalOpen) {
                 handleClose();
             }
         };
 
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
-    }, [authModalOpen]);
+    }, [isModalOpen]);
 
     // Validation functions
     const validateField = (name, value) => {
         const errors = {};
-
+        
         if (name === 'email') {
             if (!value) {
                 errors.email = 'Email is required';
@@ -133,10 +147,10 @@ export default function AuthModal() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
-
+        
         // Mark field as touched
         setTouchedFields((prev) => ({ ...prev, [name]: true }));
-
+        
         // Clear specific field error when user starts typing
         if (formErrors[name]) {
             setFormErrors((prev) => ({ ...prev, [name]: '' }));
@@ -152,12 +166,12 @@ export default function AuthModal() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         clearError();
-
+        
         // Mark all fields as touched to show all errors
-        const allFields = isLoginMode
+        const allFields = isLoginMode 
             ? ['email', 'password']
             : ['name', 'email', 'password', 'phone', 'address'];
-
+        
         const touchedAll = {};
         allFields.forEach(field => {
             touchedAll[field] = true;
@@ -206,7 +220,6 @@ export default function AuthModal() {
         });
         setFormErrors({});
         setTouchedFields({});
-        setIsLoginMode(true);
         clearError();
     };
 
@@ -217,23 +230,25 @@ export default function AuthModal() {
 
     const handleClose = () => {
         closeAuthModal();
+        closeSignupModal();
         resetForm();
     };
 
     const getInputClassName = (fieldName) => {
         const hasError = formErrors[fieldName] && touchedFields[fieldName];
-        return `w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${hasError
-            ? 'border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50'
-            : 'border-gray-300 focus:ring-purple-600 focus:border-transparent'
-            }`;
+        return `w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
+            hasError
+                ? 'border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50'
+                : 'border-gray-300 focus:ring-purple-600 focus:border-transparent'
+        }`;
     };
 
-    // Don't render if user is already logged in
-    if (!authModalOpen || isLoggedIn) return null;
+    // Don't render if user is already logged in or modal is not open
+    if (!isModalOpen || isLoggedIn) return null;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-            <div
+            <div 
                 className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md max-h-[90vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
