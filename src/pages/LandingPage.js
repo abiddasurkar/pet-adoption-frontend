@@ -12,36 +12,87 @@ export default function LandingPage() {
   const [isMuted, setIsMuted] = useState(true);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef(null);
+  const videoUrlRef = useRef(null);
+  const videoObjectUrlsRef = useRef({});
 
   // Random pet video links from various sources
   const videos = [
-  "https://videos.pexels.com/video-files/6588293/6588293-hd_1080_1920_30fps.mp4",
-  "https://videos.pexels.com/video-files/2796082/2796082-uhd_2560_1440_25fps.mp4",
-  "https://videos.pexels.com/video-files/7131832/7131832-uhd_1440_2732_30fps.mp4",
-  "https://videos.pexels.com/video-files/855029/855029-hd_1920_1080_30fps.mp4"  
+    "https://videos.pexels.com/video-files/6588293/6588293-hd_1080_1920_30fps.mp4",
+    "https://videos.pexels.com/video-files/2796082/2796082-uhd_2560_1440_25fps.mp4",
+    "https://videos.pexels.com/video-files/7131832/7131832-uhd_1440_2732_30fps.mp4",
+    "https://videos.pexels.com/video-files/855029/855029-hd_1920_1080_30fps.mp4"  
   ];
 
+  // Preload and cache videos
   useEffect(() => {
-    fetchPets(1);
-    
+    const preloadVideos = async () => {
+      try {
+        for (let i = 0; i < videos.length; i++) {
+          if (!videoObjectUrlsRef.current[i]) {
+            const response = await fetch(videos[i], {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'max-age=31536000, public'
+              }
+            });
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            videoObjectUrlsRef.current[i] = objectUrl;
+          }
+        }
+      } catch (err) {
+        console.error('Video preload error:', err);
+        // Fallback to original URLs if caching fails
+        videos.forEach((url, i) => {
+          videoObjectUrlsRef.current[i] = url;
+        });
+      }
+    };
+
+    preloadVideos();
+
     // Show text for 2 seconds, then transition to video
     const textTimer = setTimeout(() => {
       setShowVideo(true);
     }, 2000);
 
-    return () => clearTimeout(textTimer);
+    return () => {
+      clearTimeout(textTimer);
+      // Cleanup object URLs on unmount
+      Object.values(videoObjectUrlsRef.current).forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
   }, []);
 
   useEffect(() => {
     if (showVideo && videoRef.current) {
       videoRef.current.play().catch(console.error);
     }
-  }, [showVideo, currentVideo]);
+  }, [showVideo]);
+
+  // Handle video switching without re-buffering if same video
+  useEffect(() => {
+    if (!showVideo || !videoRef.current) return;
+
+    const video = videoRef.current;
+    const newVideoUrl = videoObjectUrlsRef.current[currentVideo] || videos[currentVideo];
+    
+    // Only update if source actually changed
+    if (videoUrlRef.current !== newVideoUrl) {
+      videoUrlRef.current = newVideoUrl;
+      video.src = newVideoUrl;
+      video.load();
+      video.play().catch(console.error);
+      setVideoLoaded(false);
+    }
+  }, [currentVideo, showVideo]);
 
   const handleVideoEnd = () => {
     // Switch to next video when current ends
     setCurrentVideo((prev) => (prev + 1) % videos.length);
-    setVideoLoaded(false);
   };
 
   const handleVideoLoad = () => {
@@ -55,6 +106,10 @@ export default function LandingPage() {
     }
   };
 
+  useEffect(() => {
+    fetchPets(1);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Enhanced Hero Section with Video Background */}
@@ -64,7 +119,6 @@ export default function LandingPage() {
           <div className="absolute inset-0 z-0">
             <video
               ref={videoRef}
-              key={currentVideo}
               className="w-full h-full object-cover"
               muted={isMuted}
               onEnded={handleVideoEnd}
@@ -72,8 +126,8 @@ export default function LandingPage() {
               preload="auto"
               playsInline
               crossOrigin="anonymous"
+              controls={false}
             >
-              <source src={videos[currentVideo]} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
             
@@ -91,6 +145,7 @@ export default function LandingPage() {
             <button
               onClick={toggleMute}
               className="absolute bottom-8 right-8 z-20 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all duration-300 backdrop-blur-sm"
+              aria-label={isMuted ? 'Unmute video' : 'Mute video'}
             >
               {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
             </button>
@@ -117,7 +172,7 @@ export default function LandingPage() {
               showVideo ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'
             }`}>
               <button 
-                onClick={() => document.getElementById('pets-section').scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('pets-section')?.scrollIntoView({ behavior: 'smooth' })}
                 className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-3xl overflow-hidden"
               >
                 <span className="relative z-10">Browse Available Pets</span>
@@ -132,7 +187,7 @@ export default function LandingPage() {
           showVideo ? 'opacity-100' : 'opacity-0'
         }`}>
           <div 
-            onClick={() => document.getElementById('pets-section').scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => document.getElementById('pets-section')?.scrollIntoView({ behavior: 'smooth' })}
             className="flex flex-col items-center cursor-pointer group"
           >
             <span className="text-white text-sm mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -143,11 +198,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-
-        {/* Floating Elements for Visual Interest */}
-        <div className="absolute top-20 left-10 w-8 h-8 bg-yellow-400/20 rounded-full animate-float"></div>
-        <div className="absolute top-40 right-20 w-12 h-12 bg-pink-400/20 rounded-full animate-float animation-delay-1000"></div>
-        <div className="absolute bottom-40 left-20 w-6 h-6 bg-purple-400/20 rounded-full animate-float animation-delay-2000"></div>
       </section>
 
       {/* Main Content */}
@@ -196,8 +246,8 @@ export default function LandingPage() {
                 <p className="text-gray-600 mb-6">Try adjusting your search filters to see more results.</p>
                 <button 
                   onClick={() => {
-                    // Reset filters logic would go here
-                    document.querySelector('input[type="search"]').value = '';
+                    const input = document.querySelector('input[type="search"]');
+                    if (input) input.value = '';
                   }}
                   className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
@@ -261,26 +311,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
-      {/* Add custom styles for animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animation-delay-1000 {
-          animation-delay: 1s;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .shadow-3xl {
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-      `}</style>
     </div>
   );
 }

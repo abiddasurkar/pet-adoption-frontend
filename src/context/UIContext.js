@@ -5,6 +5,7 @@ export const UIContext = createContext();
 export const UIProvider = ({ children }) => {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [toastMessages, setToastMessages] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,6 +35,16 @@ export const UIProvider = ({ children }) => {
     setSelectedPetId(null);
   };
 
+  // Open auth modal
+  const openAuthModal = () => {
+    setAuthModalOpen(true);
+  };
+
+  // Close auth modal
+  const closeAuthModal = () => {
+    setAuthModalOpen(false);
+  };
+
   // Show toast notification
   const showToast = (message, type = 'info') => {
     const id = Date.now();
@@ -58,16 +69,26 @@ export const UIProvider = ({ children }) => {
   return (
     <UIContext.Provider
       value={{
+        // Modal states
         showApplyModal,
         showDeleteModal,
+        authModalOpen,
+        
+        // UI states
         toastMessages,
         isDarkMode,
         sidebarOpen,
         selectedPetId,
+        
+        // Modal functions
         openApplyModal,
         closeApplyModal,
         openDeleteModal,
         closeDeleteModal,
+        openAuthModal,
+        closeAuthModal,
+        
+        // UI functions
         showToast,
         toggleDarkMode,
         toggleSidebar,

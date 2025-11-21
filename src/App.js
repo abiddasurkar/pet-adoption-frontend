@@ -13,52 +13,47 @@ import SignupPage from './pages/SignupPage';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Layout from './layout/Layout';
 
 function App() {
   return (
-    <Router basename="/pet-adoption-frontend">
-      <AuthProvider>
-        <PetsProvider>
-          <ApplicationsProvider>
-            <UIProvider>
-              <div className="flex flex-col min-h-screen bg-white">
-                <Navbar />
-                <main className="flex-grow">
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/pet/:id" element={<PetDetailsPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
+    <AuthProvider>
+      <PetsProvider>
+        <ApplicationsProvider>
+          <UIProvider>
+            <Router basename="/pet-adoption-frontend">
+              <Layout>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/pet/:id" element={<PetDetailsPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
 
-                    {/* Protected Routes */}
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute requiredRole="user">
-                          <UserDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute requiredRole="admin">
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-                <Footer />
-              </div>
-            </UIProvider>
-          </ApplicationsProvider>
-        </PetsProvider>
-      </AuthProvider>
-    </Router>
+                  {/* Protected Routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute requiredRole="user">
+                        <UserDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requiredRole="admin">
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Layout>
+            </Router>
+          </UIProvider>
+        </ApplicationsProvider>
+      </PetsProvider>
+    </AuthProvider>
   );
 }
 
