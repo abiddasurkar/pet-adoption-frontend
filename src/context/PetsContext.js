@@ -27,29 +27,67 @@ export const PetsProvider = ({ children }) => {
   /* -------------------------------------------------------
      FETCH ALL PETS WITH FILTERS & PAGINATION
   ------------------------------------------------------- */
-  const fetchPets = useCallback(async (page = 1, search = "", species = "", breed = "", age = "") => {
+ // inside PetsProvider: replace the old fetchPets with this
+const fetchPets = useCallback(
+  async (page = 1, search = "", species = "", breed = "", age = "") => {
+    const MAX_RETRIES = 3;          // total attempts = 1 initial + (MAX_RETRIES - 1) retries
+    const BACKOFF_BASE_MS = 300;   // base delay for exponential backoff (300ms, 600ms, 1200ms...)
+
+    const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await petsService.fetchPets(page, search, species, breed, age);
+    let attempt = 0;
+    while (attempt < MAX_RETRIES) {
+      try {
+        attempt += 1;
+        const response = await petsService.fetchPets(page, search, species, breed, age);
 
-      setAllPets(response.pets || []);
-      setFilteredPets(response.pets || []);
-      setCurrentPage(response.currentPage || 1);
-      setTotalPages(response.totalPages || 1);
-      setTotalPets(response.totalPets || 0);
+        setAllPets(response.pets || []);
+        setFilteredPets(response.pets || []);
+        setCurrentPage(response.currentPage || 1);
+        setTotalPages(response.totalPages || 1);
+        setTotalPets(response.totalPets || 0);
 
-      return { success: true };
-    } catch (err) {
-      const errorMsg = err.message || "Failed to fetch pets";
-      setError(errorMsg);
-      console.error("Fetch pets error:", err);
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
+        setIsLoading(false);
+        return { success: true };
+      } catch (err) {
+        // Determine if the error is retryable:
+        // - No response (network)
+        // - 5xx server error
+        // - 429 Too Many Requests
+        const status = err?.response?.status;
+        const isNetworkError = !err?.response;
+        const isServerError = status >= 500 && status < 600;
+        const isRateLimit = status === 429;
+
+        const shouldRetry = isNetworkError || isServerError || isRateLimit;
+
+        const errorMsg = err?.message || "Failed to fetch pets";
+        console.error(`Fetch pets error (attempt ${attempt}):`, err);
+
+        // If we've exhausted attempts or error is not retryable, set error and return failure
+        if (attempt >= MAX_RETRIES || !shouldRetry) {
+          setError(errorMsg);
+          setIsLoading(false);
+          return { success: false, error: errorMsg };
+        }
+
+        // Otherwise wait (exponential backoff) and try again
+        const backoff = BACKOFF_BASE_MS * Math.pow(2, attempt - 1); // 300, 600, 1200...
+        await sleep(backoff);
+        // loop continues to next attempt
+      }
     }
-  }, []);
+
+    // Should not reach here, but keep a safe fallback
+    setIsLoading(false);
+    setError("Failed to fetch pets");
+    return { success: false, error: "Failed to fetch pets" };
+  },
+  []
+);
 
   /* -------------------------------------------------------
      FETCH FEATURED PETS

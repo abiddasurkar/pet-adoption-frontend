@@ -119,7 +119,7 @@ export default function Navbar() {
                     }`}>
                       PetAdopt
                     </span>
-                    <span className={`text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
+                    <span className={`text-[0.60rem] ml-1 font-semibold tracking-widest uppercase transition-all duration-500 ${
                       isScrolled ? 'text-gray-400' : 'text-white/80'
                     }`}>
                       Find Your Friend
@@ -275,9 +275,9 @@ export default function Navbar() {
                 <NavLink to="/" icon={Home} mobile>
                   Home
                 </NavLink>
-                <NavLink to="/pets" icon={Search} mobile>
+                {/* <NavLink to="/pets" icon={Search} mobile>
                   Browse Pets
-                </NavLink>
+                </NavLink> */}
 
                 {isLoggedIn ? (
                   <>

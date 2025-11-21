@@ -108,7 +108,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     fetchPets(1);
-  }, []);
+  }, [fetchPets]);
 
   return (
     <div className="min-h-screen bg-gray-50">
